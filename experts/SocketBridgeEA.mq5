@@ -2,7 +2,7 @@
 //| SocketBridgeEA.mq5                                               |
 //| Socket Bridge Expert Advisor for MT5                            |
 //+------------------------------------------------------------------+
-#property copyright "Your Name"
+#property copyright "Mohamed Weesim Benna"
 #property version   "1.00"
 #property strict
 
