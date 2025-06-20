@@ -13,6 +13,9 @@ struct HttpRequest {
     string path;           // /v1/account, /v1/orders, etc.
     string body;           // Request body for POST/PUT
     string headers;        // HTTP headers
+    
+    string pathSegments[];  // path split by '/'
+    string queryParams[][2]; // 2D array for query key-value pairs
 };
 struct HttpResponse {
    SOCKET64 ClientSocket;
@@ -27,29 +30,71 @@ struct HttpResponse {
 
 HttpRequest ParseHttpRequest(string httpRequest) {
     HttpRequest request;
-  string lines[];
-   StringReplace(httpRequest, "\r\n", "\n");
-   int k = StringSplit(httpRequest, '\n', lines);
-   Print("line1: " + lines[0]);
+    string lines[];
+    StringReplace(httpRequest, "\r\n", "\n");
+    int k = StringSplit(httpRequest, '\n', lines);
+    Print("line1: " + lines[0]);
 
+    string parts[];
+    int partsCount = StringSplit(lines[0], ' ', parts);
 
-   string parts[];
-   int partsCount = StringSplit(lines[0], ' ', parts);
-   
-   Print("---- Split HTTP Request parts ----");
-   for(int i = 0; i < partsCount; i++) {
-       Print("part" + IntegerToString(i+1) + ": " + parts[i]);
-   }
-   
-   if(partsCount >= 3) {
-       request.method = parts[0];
-       request.path = parts[1];
-       // If you want, you can also assign HTTP version:
-       // request.version = parts[2];
-   } else {
-       Print("Error: HTTP request line has less than 3 parts");
-   }
+    Print("---- Split HTTP Request parts ----");
+    for(int i = 0; i < partsCount; i++) {
+        Print("part" + IntegerToString(i+1) + ": " + parts[i]);
+    }
 
+    if(partsCount >= 3) {
+        request.method = parts[0];
+        
+        // Separate path and query string
+        int qpos = StringFind(parts[1], "?");
+        if(qpos >= 0) {
+            request.path = StringSubstr(parts[1], 0, qpos);
+            string queryString = StringSubstr(parts[1], qpos + 1);
+
+            // Parse query string into key-value pairs
+            string pairs[];
+            int pairCount = StringSplit(queryString, '&', pairs);
+
+            ArrayResize(request.queryParams, pairCount);
+            for(int i = 0; i < pairCount; i++) {
+                string kv[];
+                int kvCount = StringSplit(pairs[i], '=', kv);
+                if(kvCount == 2) {
+                    request.queryParams[i][0] = kv[0]; // key
+                    request.queryParams[i][1] = kv[1]; // value
+                }
+                else if(kvCount == 1) {
+                    request.queryParams[i][0] = kv[0];
+                    request.queryParams[i][1] = "";
+                }
+                else {
+                    request.queryParams[i][0] = "";
+                    request.queryParams[i][1] = "";
+                }
+            }
+        }
+        else {
+            request.path = parts[1];
+        }
+
+        // Split path by '/'
+        string segments[];
+        int segCount = StringSplit(request.path, '/', segments);
+
+        // Filter out empty segments (like leading slash)
+        ArrayResize(request.pathSegments, 0);
+        for(int i = 0; i < segCount; i++) {
+            if(StringLen(segments[i]) > 0) {
+                int oldSize = ArraySize(request.pathSegments);
+                ArrayResize(request.pathSegments, oldSize + 1);
+                request.pathSegments[oldSize] = segments[i];
+            }
+        }
+
+    } else {
+        Print("Error: HTTP request line has less than 3 parts");
+    }
 
     // Find empty line (separator between headers and body)
     int bodyStart = -1;
