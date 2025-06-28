@@ -18,6 +18,7 @@ struct JsonResponse {
 
 
 struct Order {
+    ulong ticket;
     string symbol;
     double volume;
     string order_type;     // "buy", "sell", "buy_limit", etc.
@@ -32,6 +33,7 @@ struct Order {
 
     // Constructor with defaults
     void Init() {
+        ticket        = 0;
         symbol        = "";
         volume        = 0.0;
         order_type    = "";
@@ -75,6 +77,7 @@ public:
     JsonResponse GetSymbolInfo(string symbol);
     JsonResponse GetSymbolList();
     JsonResponse OrderInformation(ulong ticket);
+    JsonResponse ModifyOrder(Order &order);
     
     
 };
@@ -98,8 +101,8 @@ JsonResponse CCommandCore::PlaceOrder(Order &order) {
     // Set filling type if provided
     if (order.type_filling != "") {
         ENUM_ORDER_TYPE_FILLING filling = parseFillingType(order.type_filling);
-        if(filling == (ENUM_ORDER_TYPE_FILLING)-1){
-            return SendError(400, "invalid Order Type Filling");
+        if (filling == (ENUM_ORDER_TYPE_FILLING)-1) {
+            return SendError(400, "invalid order type filling");
         }
         trade.SetTypeFilling(filling);
     }
@@ -108,27 +111,24 @@ JsonResponse CCommandCore::PlaceOrder(Order &order) {
     double price = 0;
     bool is_pending = false;
 
-    // Market orders have no price
+    // Determine if market or pending
     if (order.order_type == "buy" || order.order_type == "sell") {
-        price = SymbolInfoDouble(order.symbol ,SYMBOL_ASK);
-        Print("price:"+ price);
+        price = SymbolInfoDouble(order.symbol, SYMBOL_ASK);
     } else {
-        // Pending orders require valid   price
         if (order.price <= 0) {
-            return SendError(400, "Price is required for pending orders");
+            return SendError(400, "price is required for pending orders");
         }
         price = order.price;
         is_pending = true;
     }
-    
 
-    // Determine time type (pending order expiration handling)
+    // Expiration type
     ENUM_ORDER_TYPE_TIME time_type_enum = ORDER_TIME_GTC;
     if (order.expiration > 0) {
         time_type_enum = ORDER_TIME_SPECIFIED;
     }
 
-    // Place order based on type
+    // Place order
     if (order.order_type == "buy") {
         result = trade.PositionOpen(order.symbol, ORDER_TYPE_BUY, order.volume, price, order.sl, order.tp, order.comment);
     } else if (order.order_type == "sell") {
@@ -145,12 +145,29 @@ JsonResponse CCommandCore::PlaceOrder(Order &order) {
 
     // Handle result
     if (result) {
-        ulong ticket = trade.RequestOrder();
+        ulong order_ticket = trade.ResultOrder();
+        ulong deal_ticket = trade.ResultDeal();
+        double volume = order.volume;
+        double bid = SymbolInfoDouble(order.symbol, SYMBOL_BID);
+        double ask = SymbolInfoDouble(order.symbol, SYMBOL_ASK);
 
         string json = StringFormat(
-             "\"message\":\"Order placed successfully\", \"order_ticket\":%d",
-             ticket
-         );
+            "\"msg\":\"order_send\","
+            "\"type\":\"%s\","
+            "\"deal\":%d,"
+            "\"order\":%d,"
+            "\"volume\":%.2f,"
+            "\"price\":%.5f,"
+            "\"bid\":%.5f,"
+            "\"ask\":%.5f",
+            StringFormat("order_type_%s", StringToLower(order.order_type)),
+            deal_ticket,
+            order_ticket,
+            volume,
+            price,
+            bid,
+            ask
+        );
 
         return SendJson(json);
     } else {
@@ -158,7 +175,6 @@ JsonResponse CCommandCore::PlaceOrder(Order &order) {
         return SendError(500, trade.ResultRetcodeDescription());
     }
 }
-
 
 //+------------------------------------------------------------------+
 //| Close Order Command                                              |
@@ -228,6 +244,65 @@ JsonResponse CCommandCore::CloseOrder(ulong ticket, double volume, bool async) {
         return SendError(500, "Close failed: " + trade.ResultRetcodeDescription());
     }
 }
+
+//+------------------------------------------------------------------+
+//| modify order                                                     |
+//+------------------------------------------------------------------+
+JsonResponse CCommandCore::ModifyOrder(Order &order) {
+    CTrade trade;
+    trade.SetAsyncMode(order.async);
+
+    // Select position by ticket
+    if (!PositionSelectByTicket(order.ticket)) {
+        return SendError(404, "could not find position.");
+    }
+
+    string symbol = PositionGetString(POSITION_SYMBOL);
+
+    // Get current SL/TP if not provided
+    double current_sl = PositionGetDouble(POSITION_SL);
+    double current_tp = PositionGetDouble(POSITION_TP);
+
+    double sl = (order.sl > 0) ? order.sl : current_sl;
+    double tp = (order.tp > 0) ? order.tp : current_tp;
+
+    // Modify the position
+    bool result = trade.PositionModify(symbol, sl, tp);
+
+    string type = "unknown";
+    if (sl != current_sl && tp != current_tp) type = "sl_tp_updated";
+    else if (sl != current_sl) type = "sl_updated";
+    else if (tp != current_tp) type = "tp_updated";
+
+    // Build the lowercase JSON response
+    string json = StringFormat(
+        "\"msg\":\"order_modify\","
+        "\"ticket\":%d,"
+        "\"deal\":%d,"
+        "\"order\":%d,"
+        "\"volume\":%.2f,"
+        "\"price\":%.5f,"
+        "\"bid\":%.5f,"
+        "\"ask\":%.5f",
+        order.ticket,
+        (ulong)trade.ResultDeal(),
+        (ulong)trade.ResultOrder(),
+        PositionGetDouble(POSITION_VOLUME),
+        PositionGetDouble(POSITION_PRICE_OPEN),
+        SymbolInfoDouble(symbol, SYMBOL_BID),
+        SymbolInfoDouble(symbol, SYMBOL_ASK)
+    );
+
+    if (result) {
+        return SendJson(json);
+    } else {
+        return SendError(500, trade.ResultRetcodeDescription());
+    }
+}
+
+
+
+
 
 //+------------------------------------------------------------------+
 //| Get order info                                                   |
