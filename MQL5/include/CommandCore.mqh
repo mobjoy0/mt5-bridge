@@ -10,6 +10,7 @@
 #include <HttpLib.mqh>
 #include <HistoryManager.mqh>
 #include <Trade/Trade.mqh>
+#include <ValidationUtils.mqh>
 
 struct JsonResponse {
     string jsonContent;
@@ -1187,52 +1188,3 @@ JsonResponse CCommandCore::SendJson(string jsonContent = "", int status = 200)
 
 
 
-ENUM_TIMEFRAMES getTimeFrameEnum(string tfStr)
-{
-    if(tfStr == "M1") return PERIOD_M1;
-    if(tfStr == "M5") return PERIOD_M5;
-    if(tfStr == "M15") return PERIOD_M15;
-    if(tfStr == "M30") return PERIOD_M30;
-    if(tfStr == "H1") return PERIOD_H1;
-    if(tfStr == "H4") return PERIOD_H4;
-    if(tfStr == "D1") return PERIOD_D1;
-    if(tfStr == "W1") return PERIOD_W1;
-    if(tfStr == "MN1") return PERIOD_MN1;
-    return (ENUM_TIMEFRAMES)-1; // invalid
-}
-string timeframeToString(ENUM_TIMEFRAMES tf) {
-    switch(tf) {
-        case PERIOD_M1:  return "M1";
-        case PERIOD_M5:  return "M5";
-        case PERIOD_M15: return "M15";
-        case PERIOD_M30: return "M30";
-        case PERIOD_H1:  return "H1";
-        case PERIOD_H4:  return "H4";
-        case PERIOD_D1:  return "D1";
-        case PERIOD_W1:  return "W1";
-        case PERIOD_MN1: return "MN1";
-        default: return "UNKNOWN";
-    }
-}
-
-ENUM_ORDER_TYPE_FILLING parseFillingType(string fill) {
-    if (fill == "fok") {
-        return ORDER_FILLING_FOK;      // Fill or Kill
-    } else if (fill == "ioc") {
-        return ORDER_FILLING_IOC;      // Immediate or Cancel
-    } else if (fill == "return") {
-        return ORDER_FILLING_RETURN;   
-    } else if (fill == "boc"){
-        return ORDER_FILLING_BOC;
-    } 
-    return (ENUM_ORDER_TYPE_FILLING)-1;
-}
-
-
-
-// Helper to format datetime to ISO8601 (e.g., 2025-06-27T03:30:53.000)
-string ToIso8601(datetime time) {
-    MqlDateTime dt;
-    TimeToStruct(time, dt);
-    return StringFormat("%04d-%02d-%02dT%02d:%02d:%02d.000", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec);
-}
