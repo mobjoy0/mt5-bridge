@@ -67,6 +67,8 @@ public:
 
     JsonResponse SetSymbols(string &symbols[]);
     JsonResponse SetOhlcRequests(OhlcRequest &symbols[]);
+    JsonResponse SetOrderEvents(bool enabled);
+    JsonResponse SetMbook(string &symbols[]);
     JsonResponse GetQuote(string symbol);
     JsonResponse RetriveHistoricalData(string symbol, string timeFrame, string from_date_str, string to_date_str);
     JsonResponse GetHistoryByMode(string mode, string from_date_str, string to_date_str);
@@ -541,7 +543,7 @@ JsonResponse CCommandCore::GetOrderList() {
         "\"msg\":\"order_list\","
         "\"count\":%d,"
         "\"opened\":[%s],"
-        "\"pending\":[%s],",
+        "\"pending\":[%s]",
         totalPositions + OrdersTotal(),
         openedJson,
         pendingJson
@@ -1092,8 +1094,72 @@ JsonResponse CCommandCore::SetOhlcRequests(OhlcRequest &requests[]) {
     return SendJson(response);
 }
 
+//+------------------------------------------------------------------+
+//| Set Tracking for order events                                    |
+//+------------------------------------------------------------------+
+JsonResponse CCommandCore::SetOrderEvents(bool enabled) {
+    if (dataSender != NULL) {
+        Print("setting");
+        dataSender.setOrderEvents(enabled);
+    }
 
+    string jsonStr = "\"response\":\"order_events\",\"status\":\"success\",\"enabled\":" + (enabled ? "true" : "false");
 
+    return SendJson(jsonStr);
+}
+
+//+------------------------------------------------------------------+
+//| Set Tracking for order events                                    |
+//+------------------------------------------------------------------+
+JsonResponse CCommandCore::SetMbook(string &symbols[])
+{
+    string validSymbols[];
+    string invalidSymbols[];
+    int count = ArraySize(symbols);
+
+    for(int i = 0; i < count; i++)
+    {
+        string sym = symbols[i];
+        bool selected = SymbolSelect(sym, true);
+        if(selected)
+        {
+            int newSize = ArraySize(validSymbols);
+            ArrayResize(validSymbols, newSize + 1);
+            validSymbols[newSize] = sym;
+        }
+        else
+        {
+            int newSize = ArraySize(invalidSymbols);
+            ArrayResize(invalidSymbols, newSize + 1);
+            invalidSymbols[newSize] = sym;
+        }
+    }
+
+    // Set valid symbols
+    if(dataSender != NULL && ArraySize(validSymbols) >= 0)
+    {
+        dataSender.setMbookSymbols(validSymbols);
+    }
+
+    // Build success/fail JSON
+    string validStr = "[";
+    for(int i = 0; i < ArraySize(validSymbols); i++) {
+        if(i > 0) validStr += ",";
+        validStr += "\"" + validSymbols[i] + "\"";
+    }
+    validStr += "]";
+
+    string invalidStr = "[";
+    for(int i = 0; i < ArraySize(invalidSymbols); i++) {
+        if(i > 0) invalidStr += ",";
+        invalidStr += "\"" + invalidSymbols[i] + "\"";
+    }
+    invalidStr += "]";
+
+    string jsonStr = "\"response\":\"track_prices\",\"status\":\"success\",\"accepted\":" + validStr + ",\"rejected\":" + invalidStr;
+
+    return SendJson(jsonStr);
+}
 
 //+------------------------------------------------------------------+
 //| Send Acknowledgment Response                                     |
