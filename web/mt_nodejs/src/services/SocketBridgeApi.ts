@@ -113,3 +113,23 @@ export const postTrackOhlc = async (body: OhlcRequest) => {
         data: body
     });
 }
+
+export const postTrackMbook = async (body: TrackPricesBody) => {
+    console.log("Posting track mbook...");
+    return apiRequest({
+        method: 'POST',
+        url: '/track/mbook',
+        data: body
+    });
+}
+export interface OrderEvents{
+    enabled: string;
+}
+export const postTrackOrders = async (body: OrderEvents) => {
+    console.log("Posting track order events...");
+    return apiRequest({
+        method: 'POST',
+        url: '/track/orders',
+        data: body
+    });
+}

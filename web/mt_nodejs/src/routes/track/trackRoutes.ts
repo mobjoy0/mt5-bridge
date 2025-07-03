@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import {postTrackOhlc, postTrackPrices} from '../../services/SocketBridgeApi';
+import { postTrackMbook, postTrackOhlc, postTrackOrders, postTrackPrices } from '../../services/SocketBridgeApi';
 
 const router = Router();
 
@@ -24,18 +24,15 @@ const router = Router();
  *       200:
  *         description: Tracking initiated successfully
  */
-
 router.post('/track/prices', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const body = req.body;
-        //validate later
         const result = await postTrackPrices(body);
         res.json(result);
     } catch (error) {
         next(error);
     }
 });
-
 
 /**
  * @swagger
@@ -70,7 +67,6 @@ router.post('/track/prices', async (req: Request, res: Response, next: NextFunct
 router.post('/track/ohlc', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const body = req.body;
-        //validate later
         const result = await postTrackOhlc(body);
         res.json(result);
     } catch (error) {
@@ -78,8 +74,66 @@ router.post('/track/ohlc', async (req: Request, res: Response, next: NextFunctio
     }
 });
 
+/**
+ * @swagger
+ * /track/mbook:
+ *   post:
+ *     summary: Track market book data
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               symbols:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["EURUSD", "USDJPY"]
+ *     responses:
+ *       200:
+ *         description: Tracking initiated successfully
+ */
+router.post('/track/mbook', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const body = req.body;
+        const result = await postTrackMbook(body);
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+});
 
-
-
+/**
+ * @swagger
+ * /track/orders:
+ *   post:
+ *     summary: Track order events
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               symbols:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["BTCUSD", "ETHUSD"]
+ *     responses:
+ *       200:
+ *         description: Tracking initiated successfully
+ */
+router.post('/track/orders', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const body = req.body;
+        const result = await postTrackOrders(body);
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+});
 
 export default router;
