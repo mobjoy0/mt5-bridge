@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { fetchAccount } from '../../services/SocketBridgeApi';
+import {fetchAccount, getQuote} from '../../services/SocketBridgeApi';
 
 const router = Router();
 
@@ -20,5 +20,6 @@ router.get('/account', async (req: Request, res: Response, next: NextFunction) =
         next(error);
     }
 });
+
 
 export default router;

@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { HttpError } from './HttpError';
 
 const api = axios.create({
-    baseURL: 'http://127.0.0.1:8890/v1',
+    baseURL: 'http://mt5:8890/v1',
 });
 
 export async function apiRequest<T>(config: AxiosRequestConfig): Promise<T> {

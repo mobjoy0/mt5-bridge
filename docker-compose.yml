@@ -1,0 +1,30 @@
+services:
+  mt5:
+    build:
+      context: ./mt5-container
+    container_name: mt5-debian-xfce-vnc
+    ports:
+      - "6080:6080"    # NoVNC
+      - "8890:8890"    # MT5 EA Socket
+    environment:
+      - VNC_PASSWORD=admin
+      - VNC_RESOLUTION=1600x900
+      - VNC_DEPTH=24
+    volumes:
+      - ./mt5-container/data:/opt/data
+    restart: unless-stopped
+
+  node_server:
+    build:
+      context: ./web/mt_nodejs
+    container_name: mt5-nodejs
+    ports:
+      - "8891:8891"
+    volumes:
+      - ./web/mt_nodejs:/app
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - mt5
+    restart: unless-stopped
+    command: npm run dev

@@ -133,3 +133,11 @@ export const postTrackOrders = async (body: OrderEvents) => {
         data: body
     });
 }
+
+export const getQuote = async (symbol: string) => {
+    console.log(`Fetching quote for symbol: ${symbol}`);
+    return apiRequest({
+        method: 'GET',
+        url: `/quote?symbol=${encodeURIComponent(symbol)}`,
+    });
+}
