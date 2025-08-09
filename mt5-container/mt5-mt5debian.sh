@@ -10,7 +10,7 @@ if [ -f "$WINEPREFIX/drive_c/Program Files/MetaTrader 5/terminal64.exe" ]; then
     # Fix Wine registry issues
     wineserver -w
     wine reg add "HKEY_CURRENT_USER\\Software\\Wine" /v Version /t REG_SZ /d "win10" /f
-    wine "$WINEPREFIX/drive_c/Program Files/MetaTrader 5/terminal64.exe"
+    wine "$WINEPREFIX/drive_c/Program Files/MetaTrader 5/terminal64.exe" /portable
     exit 0
 fi
 
@@ -43,6 +43,7 @@ wget -O /tmp/webview2setup.exe $URL_WEBVIEW
 
 winecfg -v=win10
 wine /tmp/webview2setup.exe /silent /install
+
 # Run MT5 installer
 wine /tmp/mt5setup.exe &
 
@@ -56,8 +57,10 @@ done
 
 echo "MT5 installed! Killing auto-launched MT5..."
 # Kill any auto-launched MT5 instances
+sleep 10
 pkill -f terminal64.exe
 
+sleep 5
 echo "Launching in portable mode..."
 # Launch it in portable mode to generate MQL5/Experts folders
 wine "$WINEPREFIX/drive_c/Program Files/MetaTrader 5/terminal64.exe" /portable &
@@ -68,6 +71,7 @@ while [ ! -d "$WINEPREFIX/drive_c/Program Files/MetaTrader 5/MQL5/Experts" ]; do
     sleep 2
 done
 
+sleep 2
 echo "Copying EA..."
 mv /SocketBridgeEA.ex5 "$WINEPREFIX/drive_c/Program Files/MetaTrader 5/MQL5/Experts/SocketBridgeEA.ex5"
 
