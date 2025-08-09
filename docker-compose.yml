@@ -24,7 +24,25 @@ services:
       - ./web/mt_nodejs:/app
     environment:
       - NODE_ENV=development
-    depends_on:
-      - mt5
+    #depends_on:
+    #  - mt5
     restart: unless-stopped
     command: npm run dev
+
+  react_app:
+    build:
+      context: ./web/mt5react
+    container_name: mt5-react
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./web/mt5react:/app
+      - /app/node_modules
+    environment:
+      - HOST=0.0.0.0
+      - NODE_ENV=development
+    #depends_on:
+    #  - node_server
+    restart: unless-stopped
+    command: npm run dev -- --host 0.0.0.0
+
