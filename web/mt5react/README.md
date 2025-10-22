@@ -1,54 +1,75 @@
-# React + TypeScript + Vite
+# MT5 Bridge — React Testing Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![React](https://img.shields.io/badge/React-19.1-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6.3-646CFF.svg)](https://vitejs.dev/)
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+A React-based testing and demonstration interface for the MT5 Bridge API. This dashboard provides a visual way to interact with MetaTrader 5 through the Node.js backend and WebSocket server.
 
-## Expanding the ESLint configuration
+> **Note:** This is a reference implementation primarily used for testing and demonstrating the MT5 Bridge functionality.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+##  Features
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+###  Market Data
+- **Live Price Streaming** — Real-time price updates via WebSocket connection
+- **Price History Charts** — Interactive candlestick charts using Lightweight Charts
+- **Symbol Information** — View detailed symbol specifications
+- **CSV Export** — Export historical price data to CSV format
+
+###  Account Management
+- **Account Overview** — Real-time balance, equity, margin, and profit/loss
+- **Position Monitoring** — View all open positions with live P&L updates
+- **Order History** — Track past orders and trades
+
+###  Trading Operations
+- **Place Orders** — Simple form to open new market/pending orders
+- **Close Positions** — One-click position closing from the dashboard
+- **Modify Orders** — Update stop loss and take profit levels
+
+###  Connectivity
+- **WebSocket Connection** — Direct connection to MT5 EA (port 8890) for live updates
+- **REST API Integration** — All operations through the Node.js backend (port 8891)
+- **Connection Status** — Visual indicators for connection health
+
+##  Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- MT5 SocketBridgeEA running on port 8890
+- Node.js backend running on port 8891
+
+### Installation & Running
+
+```bash
+# Navigate to the React app directory
+cd mt5-bridge/web/mt5react
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The app will be available at **http://localhost:8002**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🤝 Contributing
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+This is a testing/demo interface and contributions are especially welcome! Areas for improvement:
+
+- 🎨 **UI/UX Design** — Modernize the interface
+- 📱 **Responsive Layout** — Mobile optimization
+- 🧪 **Testing** — Add unit and integration tests
+- 📊 **Advanced Charts** — More technical indicators
+
+
+## 🔗 Related Projects
+
+- [MT5 SocketBridgeEA](../../MQL5) — MetaTrader 5 Expert Advisor
+- [Node.js Backend](../mt_nodejs) — REST API middleware
+
+---
+
+Made with ❤️ by [mobjoy0](https://github.com/mobjoy0)
